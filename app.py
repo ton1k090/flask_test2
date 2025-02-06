@@ -39,6 +39,51 @@ def about():
     return render_template('about.html')
 
 
+@app.route('/posts')
+def posts():
+    '''Хендлер страницы о нас'''
+    # articles = Article.query.first() # Взять одну запись
+    articles = Article.query.order_by(Article.date.desc()).all() # Взять все записимСортировка по полю дате
+    return render_template('posts.html', articles=articles)
+
+@app.route('/posts/<int:id>')
+def post_detail(id):
+    '''Хендлер страницы о нас'''
+    article = Article.query.get(id)
+    return render_template('posts_detail.html', article=article)
+
+
+@app.route('/posts/<int:id>/delete')
+def post_delete(id):
+    '''Хендлер страницы о нас'''
+    article = Article.query.get_or_404(id)
+    try:
+        db.session.delete(article)
+        db.session.commit()
+        return redirect('/posts')
+    except:
+        return 'Errors delete articles'
+
+@app.route('/posts/<int:id>/update', methods=['GET', 'POST']) # Методы гет и пост
+def post_update(id):
+    article = Article.query.get(id)  # Находим нужный обьект
+    '''Записывает данные в БД'''
+    if request.method == 'POST':
+        article.title = request.form['title'] # Для этого обекта меняем значения на значения из формы
+        article.intro = request.form['intro']
+        article.text = request.form['text']
+
+        try:
+            db.session.commit() # Обновляем БД
+            return redirect('/posts') # Если ок переадресуем на глав страницу
+        except:
+            return 'Errors for this update'
+    else:
+        return render_template('post_update.html')
+
+
+
+
 @app.route('/create-article', methods=['GET', 'POST']) # Методы гет и пост
 def create_article():
     '''Записывает данные в БД'''
@@ -51,13 +96,13 @@ def create_article():
         try:
             db.session.add(article) # Добавляем в сессию
             db.session.commit() # Коммитим изменения
-            return redirect('/') # Если ок переадресуем на глав страницу
+            return redirect('/posts') # Если ок переадресуем на глав страницу
         except:
             return 'Errors'
     else:
-
+        article =Article.query.get(id)
         '''Хендлер страницы о нас'''
-        return render_template('create_article.html')
+        return render_template('post_update.html', article=article)
 
 
 
